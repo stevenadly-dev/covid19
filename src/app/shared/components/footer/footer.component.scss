@@ -1,0 +1,15 @@
+@import "../../../../variables";
+@import "~bootstrap/scss/bootstrap";
+footer {
+  background: $main;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 1em 0.5em;
+  h3 {
+    margin-bottom: 0;
+    font-size: 1.3em;
+    color: white;
+  }
+}

@@ -1,3 +1,4 @@
+import { dataWithDate } from "./../models";
 import { dataModel } from "./../models/data.model";
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
@@ -8,10 +9,34 @@ import { map } from "rxjs/operators";
 })
 export class DataServicesService {
   serverUrl: string;
+  dateWithDataUrl: string;
+  Yesterday: Date;
+  YesterdayString = "";
   constructor(private http: HttpClient) {
-    this.serverUrl =
-      "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/08-14-2020.csv";
+    this.Yesterday = new Date();
+    var dd = this.Yesterday.getDate() - 1;
+    var mm = this.Yesterday.getMonth() + 1;
+    var yyyy = this.Yesterday.getFullYear();
+
+    this.YesterdayString = `${mm}-${dd}-${yyyy}`;
+    console.log("yesterday", this.YesterdayString);
+
+    this.serverUrl = `https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/${this.checkMMDD(
+      mm
+    )}-${this.checkMMDD(dd)}-${yyyy}.csv`;
+
+    this.dateWithDataUrl =
+      "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv";
   }
+
+  checkMMDD(mmOrDD: number) {
+    if (mmOrDD < 10) {
+      return "0" + mmOrDD;
+    } else {
+      return mmOrDD;
+    }
+  }
+
   getData() {
     return this.http.get(this.serverUrl, { responseType: "text" }).pipe(
       map((res) => {
@@ -20,6 +45,7 @@ export class DataServicesService {
 
         let rows = res.split("\n");
         rows.splice(0, 1);
+        rows.splice(0, -1);
         rows.forEach((row) => {
           let cols = row.split(/,(?=\S)/g);
           let currentItem: dataModel;
@@ -33,12 +59,10 @@ export class DataServicesService {
 
           // like us , brazil...
           /*
-          we want to get
+          we want to get by return====>> newDataRow
           [
-            {'brazil',{}},
-            {'us',{}},
-            {'egypt',{}},
-
+           Albania: {Country_Region: "Albania", Confirmed: 7260, Deaths: 225, Recovered: 3746, Active: 3289},
+           Brunei: {Country_Region: "Brunei", Confirmed: 142, Deaths: 3, Recovered: 138, Active: 1}
           ]
           */
 
@@ -58,6 +82,41 @@ export class DataServicesService {
 
         // console.log("data=============", newDataRow);
         return Object.values(newDataRow);
+      })
+    );
+  }
+
+  getCountryDataWithDate() {
+    return this.http.get(this.dateWithDataUrl, { responseType: "text" }).pipe(
+      map((res) => {
+        let rows = res.split("\n");
+        let mainDataArr = {};
+        let header = rows[0];
+        let dates = header.split(/,(?=\S)/g);
+        dates.splice(0, 4);
+        rows.splice(0, 1);
+
+        rows.forEach((row) => {
+          let columns = row.split(/,(?=\S)/g);
+          let countryName = columns[1];
+          // console.log(countryName, columns);
+          mainDataArr[countryName] = [];
+          columns.splice(0, 4);
+          // console.log("columns", columns);
+          columns.forEach((value, index) => {
+            let dateWithData: dataWithDate = {
+              cases: Math.floor(+value),
+              country: countryName,
+              date: new Date(Date.parse(dates[index])),
+            };
+            mainDataArr[countryName].push(dateWithData);
+          });
+
+          // return mainData;
+        });
+
+        // console.log("============================", mainDataArr);
+        return mainDataArr;
       })
     );
   }

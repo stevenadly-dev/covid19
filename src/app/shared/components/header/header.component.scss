@@ -1,0 +1,16 @@
+.nav-link {
+  font-size: 1.3em;
+  color: white !important;
+  padding: 5px;
+  border-radius: 7px;
+  &.active {
+    color: white !important;
+    background: #ddd !important;
+  }
+}
+.logoimg {
+  width: 60px !important;
+}
+.bg-primary {
+  background: #701f1f !important;
+}
